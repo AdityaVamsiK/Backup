@@ -12,7 +12,7 @@ class BackupGUI(ctk.CTk):
         self.resizable(False, False)
 
         # Outer frame
-        self.outer_frame = ctk.CTkFrame(self, corner_radius=10, border_width=2)
+        self.outer_frame = ctk.CTkFrame(self, corner_radius=10, border_width=2, fg_color="#f0f0f0")
         self.outer_frame.pack(padx=10, pady=10, fill="both", expand=True)
 
         # Source Directory
@@ -20,7 +20,10 @@ class BackupGUI(ctk.CTk):
         self.location_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
         self.source_entry = ctk.CTkEntry(self.outer_frame, width=200)
         self.source_entry.grid(row=0, column=1, padx=5, pady=5, sticky="w")
-        self.source_button = ctk.CTkButton(self.outer_frame, text="Browse", command=self.browse_source, width=60)
+        self.source_button = ctk.CTkButton(self.outer_frame, text="Browse", command=self.browse_source, width=60, 
+                                           fg_color="#d3d3d3",  
+                                           hover_color="#c0c0c0",  
+                                           text_color="black")
         self.source_button.grid(row=0, column=2, padx=5, pady=5)
 
         # Backup Directory
@@ -28,7 +31,9 @@ class BackupGUI(ctk.CTk):
         self.backup_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
         self.backup_entry = ctk.CTkEntry(self.outer_frame, width=200)
         self.backup_entry.grid(row=1, column=1, padx=5, pady=5, sticky="w")
-        self.backup_button = ctk.CTkButton(self.outer_frame, text="Browse", command=self.browse_backup, width=60)
+        self.backup_button = ctk.CTkButton(self.outer_frame, text="Browse", command=self.browse_backup, width=60, fg_color="#d3d3d3",  
+                                           hover_color="#c0c0c0",  
+                                           text_color="black")
         self.backup_button.grid(row=1, column=2, padx=5, pady=5)
 
         # Divider
@@ -38,10 +43,10 @@ class BackupGUI(ctk.CTk):
         self.button_frame = ctk.CTkFrame(self.outer_frame, fg_color="transparent")
         self.button_frame.grid(row=3, column=0, columnspan=3, pady=5, padx=5, sticky="ew")
 
-        ctk.CTkButton(self.button_frame, text="Show Tree", command=self.show_tree, width=90).pack(side="left", padx=2)
-        ctk.CTkButton(self.button_frame, text="Directory Diff", command=self.show_diff, width=90).pack(side="left", padx=2)
-        ctk.CTkButton(self.button_frame, text="Update Backup", command=self.run_backup, width=90).pack(side="left", padx=2)
-        ctk.CTkButton(self.button_frame, text="Create Replica", command=self.create_replica_dir, width=90).pack(side="left", padx=2)
+        ctk.CTkButton(self.button_frame, text="Show Tree", command=self.show_tree, width=90, fg_color="#d3d3d3", hover_color="#c0c0c0", text_color="black").pack(side="left", padx=2)
+        ctk.CTkButton(self.button_frame, text="Directory Diff", command=self.show_diff, width=90, fg_color="#d3d3d3", hover_color="#c0c0c0", text_color="black").pack(side="left", padx=2)
+        ctk.CTkButton(self.button_frame, text="Update Backup", command=self.run_backup, width=90, fg_color="#d3d3d3", hover_color="#c0c0c0", text_color="black").pack(side="left", padx=2)
+        ctk.CTkButton(self.button_frame, text="Create Replica", command=self.create_replica_dir, width=90, fg_color="#d3d3d3", hover_color="#c0c0c0", text_color="black").pack(side="left", padx=2)
 
         # Divider
         ctk.CTkLabel(self.outer_frame, text="", height=2).grid(row=4, column=0, columnspan=3)
@@ -54,8 +59,8 @@ class BackupGUI(ctk.CTk):
         self.bottom_frame = ctk.CTkFrame(self.outer_frame, fg_color="transparent")
         self.bottom_frame.grid(row=6, column=0, columnspan=3, pady=(5, 10))
 
-        ctk.CTkButton(self.bottom_frame, text="OK", width=80, command=self.quit).pack(side="left", padx=5)
-        ctk.CTkButton(self.bottom_frame, text="Cancel", width=80, command=self.quit).pack(side="left", padx=5)
+        ctk.CTkButton(self.bottom_frame, text="OK", width=80, command=self.quit, fg_color="#d3d3d3", hover_color="#c0c0c0", text_color="black").pack(side="left", padx=5)
+        ctk.CTkButton(self.bottom_frame, text="Cancel", width=80, command=self.quit, fg_color="#d3d3d3", hover_color="#c0c0c0", text_color="black").pack(side="left", padx=5)
 
     def browse_source(self):
         path = filedialog.askdirectory()

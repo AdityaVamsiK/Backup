@@ -3,8 +3,8 @@ import os
 import shutil
 import hashlib
 
-src_dir = [r'C:\Users\aditya\Documents\Test Folder'] # List of directories to back up
-backup = r'C:\Users\aditya\Documents\Test Folder 2' # Where to back up to
+# src_dir = [r'C:\Users\aditya\Documents\Test Folder'] # List of directories to back up
+# backup = r'C:\Users\aditya\Documents\Test Folder 2' # Where to back up to
 
 # Displays Directory Structure in a directory tree format
 def print_directory_tree(start_path, indent=''):
@@ -154,7 +154,3 @@ def update_backup(source, backup):
             print(f"Deleted empty directory: {rel_dir}")
     print(f'---File backup success!---')
 
-for directory in src_dir:
-    directory_diff(directory, backup)
-    update_backup(directory, backup)
-    directory_diff(directory, backup)
