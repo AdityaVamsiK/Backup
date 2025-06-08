@@ -2,9 +2,7 @@
 import os
 import shutil
 import hashlib
-
-# src_dir = [r'C:\Users\aditya\Documents\Test Folder'] # List of directories to back up
-# backup = r'C:\Users\aditya\Documents\Test Folder 2' # Where to back up to
+import tempfile
 
 # Displays Directory Structure in a directory tree format
 def print_directory_tree(start_path, indent=''):
@@ -18,27 +16,31 @@ def print_directory_tree(start_path, indent=''):
 
 # Creates an exact replica of the directory structure without checking for its presence
 def create_replica(src, dst):
-    if not os.path.exists(dst):
-        os.makedirs(dst)
+    # Create a temporary directory for atomic operation
+    dst_parent = os.path.dirname(dst)
+    temp_dst = tempfile.mkdtemp(dir=dst_parent)
 
-    for root, dirs, files in os.walk(src):
-        # Compute relative path from source
-        rel_path = os.path.relpath(root, src)
-        dest_dir = os.path.join(dst, rel_path)
+    try:
+        for root, dirs, files in os.walk(src):
+            rel_path = os.path.relpath(root, src)
+            dest_dir = os.path.join(temp_dst, rel_path)
+            os.makedirs(dest_dir, exist_ok=True)
 
-        # Ensure destination subdirectory exists
-        os.makedirs(dest_dir, exist_ok=True)
-
-        for file in files:
-            src_file = os.path.join(root, file)
-            dst_file = os.path.join(dest_dir, file)
-
-            if not os.path.exists(dst_file):
+            for file in files:
+                src_file = os.path.join(root, file)
+                dst_file = os.path.join(dest_dir, file)
                 shutil.copy2(src_file, dst_file)
-                print(f"Copied: {dst_file}")
-            else:
-                print(f"Skipped (already exists): {dst_file}")
-    print(f'---Replica Creation Success!---')
+
+        # Atomically replace old backup with the new one
+        if os.path.exists(dst):
+            shutil.rmtree(dst)
+        os.replace(temp_dst, dst)
+        print(f'---Replica Creation Success (Atomic)!---')
+
+    except Exception as e:
+        shutil.rmtree(temp_dst, ignore_errors=True)
+        print(f'Error during atomic replica creation: {e}')
+    print(f'---Replica Creation Successful!---')
 
 
 def file_hash(path):
@@ -117,40 +119,45 @@ def directory_diff(source, backup):
 
 # Updates all the changed files, adds new files and directories, removes deleted files and directories
 def update_backup(source, backup):
-    diff = directory_diff(source, backup)
+    # Work in a temp directory and then atomically replace the original
+    backup_parent = os.path.dirname(backup)
+    temp_backup = tempfile.mkdtemp(dir=backup_parent)
 
-    # Create new directories
-    for rel_dir in diff["created_dirs"]:
-        dest_dir = os.path.join(backup, rel_dir)
-        os.makedirs(dest_dir, exist_ok=True)
-        print(f"Created directory: {rel_dir}")
+    try:
+        # First copy everything from existing backup (if it exists)
+        if os.path.exists(backup):
+            create_replica(backup, temp_backup)
 
-    # Copy new files
-    for rel_file in diff["created_files"]:
-        src_file = os.path.join(source, rel_file)
-        dst_file = os.path.join(backup, rel_file)
-        os.makedirs(os.path.dirname(dst_file), exist_ok=True)
-        shutil.copy2(src_file, dst_file)
-        print(f"Copied new file: {rel_file}")
+        # Apply updates to the temp backup
+        diff = directory_diff(source, backup)
 
-    # Update modified files
-    for rel_file in diff["updated_files"]:
-        src_file = os.path.join(source, rel_file)
-        dst_file = os.path.join(backup, rel_file)
-        shutil.copy2(src_file, dst_file)
-        print(f"Updated file: {rel_file}")
+        for rel_dir in diff["created_dirs"]:
+            os.makedirs(os.path.join(temp_backup, rel_dir), exist_ok=True)
 
-    # Delete removed files
-    for rel_file in diff["deleted_files"]:
-        bkp_file = os.path.join(backup, rel_file)
-        os.remove(bkp_file)
-        print(f"Deleted file: {rel_file}")
+        for rel_file in diff["created_files"] + diff["updated_files"]:
+            src_file = os.path.join(source, rel_file)
+            dst_file = os.path.join(temp_backup, rel_file)
+            os.makedirs(os.path.dirname(dst_file), exist_ok=True)
+            shutil.copy2(src_file, dst_file)
 
-    # Delete empty directories (bottom-up to avoid breaking paths)
-    for rel_dir in sorted(diff["deleted_dirs"], reverse=True):
-        bkp_dir = os.path.join(backup, rel_dir)
-        if os.path.isdir(bkp_dir) and not os.listdir(bkp_dir):
-            os.rmdir(bkp_dir)
-            print(f"Deleted empty directory: {rel_dir}")
-    print(f'---File backup success!---')
+        for rel_file in diff["deleted_files"]:
+            try:
+                os.remove(os.path.join(temp_backup, rel_file))
+            except FileNotFoundError:
+                pass
 
+        for rel_dir in sorted(diff["deleted_dirs"], reverse=True):
+            bkp_dir = os.path.join(temp_backup, rel_dir)
+            if os.path.isdir(bkp_dir) and not os.listdir(bkp_dir):
+                os.rmdir(bkp_dir)
+
+        # Replace the old backup atomically
+        if os.path.exists(backup):
+            shutil.rmtree(backup)
+        os.replace(temp_backup, backup)
+        print(f'---File backup success (Atomic)!---')
+
+    except Exception as e:
+        shutil.rmtree(temp_backup, ignore_errors=True)
+        print(f"Error during atomic update: {e}")
+    print(f'---Backup Successful!---')
